@@ -16,28 +16,20 @@ The app runs a **reasoning loop** with four actions:
 - `app/database.py`: SQLite schema + seed data.
 - `app/shipping_provider.py`: Mock external shipping API over HTTP.
 - `app/services.py`: Repository, shipping client, business rules, discount generator, and orchestrator.
-- `app/api_server.py`: HTTP API exposing `/health` and `/support/request`.
-- `app/main.py`: demo runner and server entrypoint.
+- `app/main.py`: End-to-end demo runner.
 
 ## Run the End-to-End Demo
 
 ```bash
-python -m app.main --mode demo --email alice@example.com
+python -m app.main
 ```
 
-## Run as HTTP API
+The script will:
 
-```bash
-python -m app.main --mode serve --host 127.0.0.1 --port 8000
-```
-
-Then in another terminal:
-
-```bash
-curl -X POST http://127.0.0.1:8000/support/request \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"alice@example.com"}'
-```
+- initialize the SQL database,
+- start the simulated external shipping API,
+- run the orchestrator flow,
+- print the final composed customer response.
 
 ## Seed Data
 
@@ -47,5 +39,5 @@ curl -X POST http://127.0.0.1:8000/support/request \
 ## Tests
 
 ```bash
-pytest -q
+pytest
 ```
