@@ -11,7 +11,6 @@ from app.services import (
     OrderRepository,
     ShippingAPIClient,
     SupportAgentOrchestrator,
-    LLMResponseComposer,
 )
 from app.shipping_provider import ShippingProviderServer
 
@@ -31,7 +30,6 @@ def build_orchestrator(shipping_base_url: str) -> SupportAgentOrchestrator:
         shipping_client=ShippingAPIClient(shipping_base_url),
         rules_engine=BusinessRulesEngine(),
         discount_service=DiscountService(),
-        llm_composer=LLMResponseComposer(api_key=None),
     )
 
 
@@ -45,7 +43,7 @@ def post_json(url: str, payload: dict) -> tuple[int, dict]:
         return exc.code, json.loads(exc.read().decode("utf-8"))
 
 
-def test_support_endpoint_delayed_order_with_discount_request() -> None:
+def test_support_endpoint_delayed_order() -> None:
     shipping = ShippingProviderServer(port=8111)
     shipping.start()
     orchestrator = build_orchestrator(shipping.base_url)
@@ -53,13 +51,7 @@ def test_support_endpoint_delayed_order_with_discount_request() -> None:
     api.start()
 
     try:
-        status, body = post_json(
-            f"{api.base_url}/support/request",
-            {
-                "email": "alice@example.com",
-                "customer_message": "Where is my order and can I get a 10% discount code?",
-            },
-        )
+        status, body = post_json(f"{api.base_url}/support/request", {"email": "alice@example.com"})
     finally:
         api.stop()
         shipping.stop()
@@ -67,34 +59,13 @@ def test_support_endpoint_delayed_order_with_discount_request() -> None:
     assert status == 200
     assert body["order_id"] == "ORD-1001"
     assert body["discount_code"].startswith("SORRY10-")
-    assert body["is_delayed"] is True
 
 
-def test_support_endpoint_delayed_order_no_discount_without_request() -> None:
+def test_support_endpoint_invalid_email() -> None:
     shipping = ShippingProviderServer(port=8112)
     shipping.start()
     orchestrator = build_orchestrator(shipping.base_url)
     api = SupportAPIServer(orchestrator, port=8212)
-    api.start()
-
-    try:
-        status, body = post_json(
-            f"{api.base_url}/support/request",
-            {"email": "alice@example.com", "customer_message": "Where is my order?"},
-        )
-    finally:
-        api.stop()
-        shipping.stop()
-
-    assert status == 200
-    assert body["discount_code"] is None
-
-
-def test_support_endpoint_invalid_email() -> None:
-    shipping = ShippingProviderServer(port=8113)
-    shipping.start()
-    orchestrator = build_orchestrator(shipping.base_url)
-    api = SupportAPIServer(orchestrator, port=8213)
     api.start()
 
     try:

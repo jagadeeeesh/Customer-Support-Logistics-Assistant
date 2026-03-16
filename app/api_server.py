@@ -50,15 +50,8 @@ class SupportAPIHandler(BaseHTTPRequestHandler):
             self._send_json(HTTPStatus.BAD_REQUEST, {"error": "email must be a valid address"})
             return
 
-        customer_message = payload.get("customer_message", "Where is my order?")
-        if not isinstance(customer_message, str):
-            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "customer_message must be a string"})
-            return
-
         try:
-            response = self.orchestrator.handle_request(
-                SupportRequest(email=email, customer_message=customer_message)
-            )
+            response = self.orchestrator.handle_request(SupportRequest(email=email))
         except OrderNotFoundError as exc:
             self._send_json(HTTPStatus.NOT_FOUND, {"error": str(exc)})
             return
@@ -66,7 +59,7 @@ class SupportAPIHandler(BaseHTTPRequestHandler):
             self._send_json(HTTPStatus.BAD_GATEWAY, {"error": str(exc)})
             return
 
-        self._send_json(HTTPStatus.OK, response.to_dict())
+        self._send_json(HTTPStatus.OK, response.__dict__)
 
     def log_message(self, fmt: str, *args: Any) -> None:
         return

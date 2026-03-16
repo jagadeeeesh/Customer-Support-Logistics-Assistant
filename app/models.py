@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime
 
 
 @dataclass
 class SupportRequest:
     email: str
-    customer_message: str = "Where is my order?"
 
 
 @dataclass
@@ -38,11 +37,6 @@ class SupportResponse:
     shipping_status: str
     latest_location: str
     estimated_delivery_date: datetime
-    guaranteed_delivery_date: datetime
-    is_delayed: bool
     discount_code: str | None
     message: str
     reasoning_steps: list[str]
-
-    def to_dict(self) -> dict:
-        return asdict(self)
